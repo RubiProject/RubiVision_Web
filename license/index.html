@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Rubi Vision License</title>
+</head>
+<body>
+  <h2>Rubi Vision License</h2>
+
+  <label>🔑 SECRET_KEY (base64):<br>
+    <input type="text" id="secret" size="60" />
+  </label><br><br>
+
+  <label>📷 Number of cameras:<br>
+    <input type="number" id="qtd_cameras" value="10" min="1" />
+  </label><br><br>
+
+  <label>🧾 Number of licenses:<br>
+    <input type="number" id="qtd_licencas" value="5" min="1" />
+  </label><br><br>
+
+  <button onclick="requestLicenses()">🚀 Generate</button>
+  <button onclick="copyLicenses()">📋 Copy</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    async function requestLicenses() {
+      const secret = document.getElementById("secret").value.trim();
+      const qtdCameras = parseInt(document.getElementById("qtd_cameras").value);
+      const qtdLicencas = parseInt(document.getElementById("qtd_licencas").value);
+      const output = document.getElementById("output");
+
+      if (!secret || isNaN(qtdCameras) || isNaN(qtdLicencas)) {
+        output.textContent = "⚠️ Please fill in all fields correctly.";
+        return;
+      }
+
+      try {
+        const res = await fetch("https://api.rubiproject.com/license", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ secret, qtdCameras, qtdLicencas })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          output.textContent = "❌ Error: " + data.message;
+          return;
+        }
+
+        output.textContent = data.licenses.join("\n");
+      } catch (err) {
+        output.textContent = "❌ Request failed: " + err.message;
+      }
+    }
+
+    function copyLicenses() {
+      const text = document.getElementById("output").textContent;
+      if (!text.trim()) {
+        alert("⚠️ No licenses generated yet!");
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        alert("✅ License(s) copied to clipboard!");
+      }).catch(err => {
+        alert("❌ Failed to copy: " + err);
+      });
+    }
+  </script>
+</body>
+</html>
